@@ -1,0 +1,13 @@
+src/
+tsconfig.json
+biome.json
+.git/
+.gitignore
+node_modules/
+*.log
+.env
+.env.*
+coverage/
+.nyc_output/
+.DS_Store
+Thumbs.db
