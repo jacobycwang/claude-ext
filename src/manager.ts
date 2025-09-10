@@ -8,7 +8,7 @@ import {
 } from "./config.js";
 
 export function toggleMcpServers(selectedServers: string[]): void {
-	const { active, disabled } = getAllMcpServers();
+	const { active, disabled, project } = getAllMcpServers();
 	const claudeConfig = readClaudeConfig();
 	const claudeExtConfig = readClaudeExtConfig();
 
@@ -21,15 +21,18 @@ export function toggleMcpServers(selectedServers: string[]): void {
 	}
 
 	const allServers = { ...active, ...disabled };
-	const selectedSet = new Set(selectedServers);
+	
+	// Separate project servers from regular servers
+	const projectServerSelection = selectedServers.filter(name => name.startsWith("project:"));
+	const regularServerSelection = selectedServers.filter(name => !name.startsWith("project:"));
 
 	// Clear both configs' mcpServers
 	claudeConfig.mcpServers = {};
 	claudeExtConfig.mcpServers = {};
 
-	// Distribute servers based on selection
+	// Handle regular servers (global/disabled servers)
 	for (const [serverName, serverConfig] of Object.entries(allServers)) {
-		if (selectedSet.has(serverName)) {
+		if (regularServerSelection.includes(serverName)) {
 			// Server should be active - move to ~/.claude.json
 			claudeConfig.mcpServers[serverName] = serverConfig;
 			console.log(chalk.green(`✓ Enabled: ${serverName}`));
@@ -37,6 +40,18 @@ export function toggleMcpServers(selectedServers: string[]): void {
 			// Server should be disabled - move to ~/.claude-ext.json
 			claudeExtConfig.mcpServers[serverName] = serverConfig;
 			console.log(chalk.red(`✗ Disabled: ${serverName}`));
+		}
+	}
+
+	// Handle project servers (copy to global config when selected)
+	for (const [serverName, serverConfig] of Object.entries(project)) {
+		const projectServerKey = `project:${serverName}`;
+		if (projectServerSelection.includes(projectServerKey)) {
+			// Project server should be active - copy to ~/.claude.json
+			claudeConfig.mcpServers[serverName] = serverConfig;
+			console.log(chalk.green(`✓ Enabled: ${serverName} ${chalk.gray("(from project)")}`));
+		} else {
+			console.log(chalk.gray(`- Skipped: ${serverName} ${chalk.gray("(project server, not selected)")}`));
 		}
 	}
 
