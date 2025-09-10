@@ -25,13 +25,14 @@ export function createServerToggleItems(): ServerToggleItem[] {
 		});
 	}
 
-	// Add project servers (disabled - read-only)
+	// Add project servers (toggleable)
 	for (const [name] of Object.entries(project)) {
+		// Check if this project server is also active in global config
+		const isActiveGlobally = name in active;
 		items.push({
-			name: `${chalk.blue("📁")} ${name} ${chalk.gray("(project - read-only)")}`,
+			name: `${chalk.blue("📁")} ${name} ${chalk.gray("(project)")}${isActiveGlobally ? chalk.green(" ✓ active globally") : ""}`,
 			value: `project:${name}`,
-			checked: false,
-			disabled: true,
+			checked: isActiveGlobally,
 		});
 	}
 
