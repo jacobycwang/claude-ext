@@ -5,6 +5,7 @@ import type { ClaudeConfig } from "./types.js";
 
 const CLAUDE_CONFIG_PATH = join(homedir(), ".claude.json");
 const CLAUDE_EXT_CONFIG_PATH = join(homedir(), ".claude-ext.json");
+const PROJECT_MCP_CONFIG_PATH = ".mcp.json";
 
 export function readClaudeConfig(): ClaudeConfig {
 	try {
@@ -50,15 +51,31 @@ export function writeClaudeExtConfig(config: ClaudeConfig): void {
 	}
 }
 
+export function readProjectMcpConfig(): ClaudeConfig {
+	try {
+		if (!existsSync(PROJECT_MCP_CONFIG_PATH)) {
+			return {};
+		}
+		const content = readFileSync(PROJECT_MCP_CONFIG_PATH, "utf-8");
+		return JSON.parse(content);
+	} catch (error) {
+		console.error("Failed to read .mcp.json:", error);
+		return {};
+	}
+}
+
 export function getAllMcpServers(): {
 	active: Record<string, any>;
 	disabled: Record<string, any>;
+	project: Record<string, any>;
 } {
 	const claudeConfig = readClaudeConfig();
 	const claudeExtConfig = readClaudeExtConfig();
+	const projectConfig = readProjectMcpConfig();
 
 	return {
 		active: claudeConfig.mcpServers || {},
 		disabled: claudeExtConfig.mcpServers || {},
+		project: projectConfig.mcpServers || {},
 	};
 }

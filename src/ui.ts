@@ -4,7 +4,7 @@ import { getAllMcpServers } from "./config.js";
 import type { ServerToggleItem } from "./types.js";
 
 export function createServerToggleItems(): ServerToggleItem[] {
-	const { active, disabled } = getAllMcpServers();
+	const { active, disabled, project } = getAllMcpServers();
 	const items: ServerToggleItem[] = [];
 
 	// Add active servers (checked by default)
@@ -25,7 +25,22 @@ export function createServerToggleItems(): ServerToggleItem[] {
 		});
 	}
 
-	return items.sort((a, b) => a.value.localeCompare(b.value));
+	// Add project servers (disabled - read-only)
+	for (const [name] of Object.entries(project)) {
+		items.push({
+			name: `${chalk.blue("📁")} ${name} ${chalk.gray("(project - read-only)")}`,
+			value: `project:${name}`,
+			checked: false,
+			disabled: true,
+		});
+	}
+
+	return items.sort((a, b) => {
+		// Sort project servers last
+		if (a.value.startsWith("project:") && !b.value.startsWith("project:")) return 1;
+		if (!a.value.startsWith("project:") && b.value.startsWith("project:")) return -1;
+		return a.value.localeCompare(b.value);
+	});
 }
 
 export async function showServerToggleUI(): Promise<string[]> {
@@ -34,7 +49,7 @@ export async function showServerToggleUI(): Promise<string[]> {
 	if (items.length === 0) {
 		console.log(
 			chalk.yellow(
-				"No MCP servers found in ~/.claude.json or ~/.claude-ext.json",
+				"No MCP servers found in ~/.claude.json, ~/.claude-ext.json, or .mcp.json",
 			),
 		);
 		return [];

@@ -21,7 +21,9 @@ export function toggleMcpServers(selectedServers: string[]): void {
 	}
 
 	const allServers = { ...active, ...disabled };
-	const selectedSet = new Set(selectedServers);
+	// Filter out project servers from selection (they start with "project:")
+	const filteredSelectedServers = selectedServers.filter(name => !name.startsWith("project:"));
+	const selectedSet = new Set(filteredSelectedServers);
 
 	// Clear both configs' mcpServers
 	claudeConfig.mcpServers = {};
